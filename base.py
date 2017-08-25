@@ -112,11 +112,13 @@ class CDIPbuoy(object):
     def variables(self, ):
         return self.ncdf.variables
 
-    def spec_moment(self, n=0):
+    def spec_moment(self, arr=None, n=0):
         df = np.diff(self.waveFrequencyBounds, ).T
         f = self.waveFrequency[None, :]
         spec = self.waveEnergyDensity
-        return (f * spec * df).sum(-1)
+        if arr is None:
+            return (f ** n * spec * df).sum(-1)
+        return (arr * f ** n * spec * df).sum(-1)
 
 
 def calc_resourcematrix(buoy, Hs_edges, Tp_edges):
