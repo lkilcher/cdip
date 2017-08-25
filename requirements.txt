@@ -1,0 +1,4 @@
+netcdf4
+requests
+lxml
+diskcache
