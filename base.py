@@ -112,6 +112,12 @@ class CDIPbuoy(object):
     def variables(self, ):
         return self.ncdf.variables
 
+    def spec_moment(self, n=0):
+        df = np.diff(self.waveFrequencyBounds, ).T
+        f = self.waveFrequency[None, :]
+        spec = self.waveEnergyDensity
+        return (f * spec * df).sum(-1)
+
 
 def calc_resourcematrix(buoy, Hs_edges, Tp_edges):
     time = Date64(np.arange(buoy.waveTime[0].astype('datetime64[M]'),
