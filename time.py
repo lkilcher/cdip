@@ -23,6 +23,7 @@ def _td2hour(td):
 
 
 class Date64(np.ndarray):
+
     def __new__(cls, data):
         if isinstance(data, str):
             data = np.datetime64(data)
@@ -60,10 +61,10 @@ class Date64(np.ndarray):
     @property
     def ISO(self):
         if (self.shape):
-            out = zip(self.Year(), self.Month(), self.Day())
+            out = zip(self.year(), self.month(), self.day())
             iso = ['%04d-%02d-%02d' % each for each in out]
         else:
-            iso = '%04d-%02d-%02d' % (self.Year(), self.Month(), self.Day())
+            iso = '%04d-%02d-%02d' % (self.year(), self.month(), self.day())
         return iso
 
     def Export(self):
