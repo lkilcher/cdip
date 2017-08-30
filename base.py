@@ -1,3 +1,4 @@
+import urllib
 import netCDF4 as nc4
 import numpy as np
 import requests
@@ -119,6 +120,48 @@ class CDIPbuoy(object):
         if arr is None:
             return (f ** n * spec * df).sum(-1)
         return (arr * f ** n * spec * df).sum(-1)
+
+    @property
+    def id(self, ):
+        return int(self.ncdf.metadata_link.rsplit('/', 1)[-1][:3])
+
+    def get_dirspec(self, idx):
+
+        time_string = self.waveTime[idx].astype('O').strftime('%Y%m%d%H%M')
+
+        url = ('http://cdip.ucsd.edu/data_access/'
+               'MEM_2dspectra.cdip?sp{:03d}01{}'.format(self.id, time_string))
+
+        urlf = urllib.urlopen(url)
+        dat = urlf.read()[6:-7]
+        urlf.close()
+        data = np.fromstring(dat, sep=' ').reshape(64, -1)
+        return DirSpec(data, freq=self.waveFrequency)
+
+
+class DirSpec(object):
+
+    def __init__(self, data, freq, angle=None):
+
+        if angle is None:
+            dang = 2 * np.pi / data.shape[-1]
+            angle = np.arange(dang / 2, 2 * np.pi, dang)
+        self.angle = angle
+        self.freq = freq
+        self.data = data
+
+    def __getitem__(self, sub):
+        if not isinstance(sub, tuple):
+            sub = (sub, slice(None))
+        return DirSpec(self.data[sub], self.freq[sub[0]], self.angle[sub[1]])
+
+    @property
+    def wrapped(self, ):
+        return np.hstack((self.data, self.data[:, :1]))
+
+    @property
+    def angle_wrapped(self, ):
+        return np.hstack((self.angle, self.angle[:1] + 2 * np.pi))
 
 
 def calc_resourcematrix(buoy, Hs_edges, Tp_edges):
