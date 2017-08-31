@@ -145,27 +145,49 @@ class CDIPbuoy(object):
 
 class DirSpec(object):
 
-    def __init__(self, data, freq, angle=None):
+    def __init__(self, spec, freq, angle=None):
 
         if angle is None:
-            dang = 2 * np.pi / data.shape[-1]
+            dang = 2 * np.pi / spec.shape[-1]
             angle = np.arange(dang / 2, 2 * np.pi, dang)
         self.angle = angle
         self.freq = freq
-        self.data = data
+        self.spec = spec
 
     def __getitem__(self, sub):
         if not isinstance(sub, tuple):
             sub = (sub, slice(None))
-        return DirSpec(self.data[sub], self.freq[sub[0]], self.angle[sub[1]])
+        return DirSpec(self.spec[sub], self.freq[sub[0]], self.angle[sub[1]])
 
     @property
     def wrapped(self, ):
-        return np.hstack((self.data, self.data[:, :1]))
+        return np.concatenate((self.spec, self.spec[..., :1]), axis=-1)
 
     @property
     def angle_wrapped(self, ):
         return np.hstack((self.angle, self.angle[:1] + 2 * np.pi))
+
+
+class TimeDirSpec(DirSpec):
+
+    def __init__(self, spec, time, freq, angle=None):
+        DirSpec.__init__(self, spec, freq, angle)
+        self.time = time
+
+    def __getitem__(self, sub):
+        subs_ = [slice(None), ] * 3
+        if isinstance(sub, tuple):
+            for idx, s in enumerate(sub):
+                subs_[idx] = s
+        else:
+            subs_ = [sub] + subs_[1:]
+        if isinstance(subs_[0], int):
+            return DirSpec(self.spec[subs_],
+                           self.freq[subs_[1]],
+                           self.angle[subs_[2]])
+        else:
+            return TimeDirSpec(self.spec[subs_], self.time[subs_[0]],
+                               self.freq[subs_[1]], self.angle[subs_[2]])
 
 
 def calc_resourcematrix(buoy, Hs_edges, Tp_edges):
