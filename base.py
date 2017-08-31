@@ -145,7 +145,7 @@ class CDIPbuoy(object):
 
 class DirSpec(object):
 
-    def __init__(self, spec, freq, angle=None):
+    def __init__(self, spec, freq, angle=None, time=None):
 
         if angle is None:
             dang = 2 * np.pi / spec.shape[-1]
@@ -153,6 +153,7 @@ class DirSpec(object):
         self.angle = angle
         self.freq = freq
         self.spec = spec
+        self.time = time
 
     def __getitem__(self, sub):
         if not isinstance(sub, tuple):
@@ -184,7 +185,8 @@ class TimeDirSpec(DirSpec):
         if isinstance(subs_[0], int):
             return DirSpec(self.spec[subs_],
                            self.freq[subs_[1]],
-                           self.angle[subs_[2]])
+                           self.angle[subs_[2]],
+                           time=self.time[subs_[0]])
         else:
             return TimeDirSpec(self.spec[subs_], self.time[subs_[0]],
                                self.freq[subs_[1]], self.angle[subs_[2]])
