@@ -12,6 +12,19 @@ pkg_dir = os.path.dirname(os.path.realpath(__file__))
 cache_dir = pkg_dir + '/.cache_data/'
 
 
+def get_dirspec(id, time):
+
+    time_string = time.astype('O').strftime('%Y%m%d%H%M')
+
+    url = ('http://cdip.ucsd.edu/data_access/'
+           'MEM_2dspectra.cdip?sp{:03d}01{}'.format(id, time_string))
+
+    urlf = urllib.urlopen(url)
+    dat = urlf.read()[6:-7]
+    urlf.close()
+    return np.fromstring(dat, sep=' ').reshape(64, -1)
+
+
 def get_NDBCnum(cdip_metadata_link):
     page = requests.get(cdip_metadata_link)
     idx = page.content.find('NDBC')
@@ -126,17 +139,8 @@ class CDIPbuoy(object):
         return int(self.ncdf.metadata_link.rsplit('/', 1)[-1][:3])
 
     def get_dirspec(self, idx):
-
-        time_string = self.waveTime[idx].astype('O').strftime('%Y%m%d%H%M')
-
-        url = ('http://cdip.ucsd.edu/data_access/'
-               'MEM_2dspectra.cdip?sp{:03d}01{}'.format(self.id, time_string))
-
-        urlf = urllib.urlopen(url)
-        dat = urlf.read()[6:-7]
-        urlf.close()
-        data = np.fromstring(dat, sep=' ').reshape(64, -1)
-        return DirSpec(data, freq=self.waveFrequency)
+        return DirSpec(get_dirspec(self.id, self.waveTime[idx]),
+                       freq=self.waveFrequency)
 
 
 class DirSpec(object):
