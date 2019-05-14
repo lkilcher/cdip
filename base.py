@@ -1,4 +1,9 @@
-import urllib
+try:
+    #Py3
+    from urllib.request import urlopen
+except ImportError:
+    #py2
+    from urllib import urlopen
 import netCDF4 as nc4
 import numpy as np
 import requests
@@ -19,7 +24,7 @@ def get_dirspec(id, time):
     url = ('http://cdip.ucsd.edu/data_access/'
            'MEM_2dspectra.cdip?sp{:03d}01{}'.format(id, time_string))
 
-    urlf = urllib.urlopen(url)
+    urlf = urlopen(url)
     dat = urlf.read()[6:-7]
     urlf.close()
     return np.fromstring(dat, sep=' ').reshape(64, -1)
@@ -27,7 +32,7 @@ def get_dirspec(id, time):
 
 def get_NDBCnum(cdip_metadata_link):
     page = requests.get(cdip_metadata_link)
-    idx = page.content.find('NDBC')
+    idx = page.content.find(b'NDBC')
     return int(page.content[idx + 5:idx + 10])
 
 
@@ -117,7 +122,10 @@ class CDIPbuoy(object):
         self.NDBC_num = get_NDBCnum(self.ncdf.metadata_link)
 
     def __getattr__(self, name):
-        name = unicode(name)
+        try:
+            name = str(name, 'utf-8')
+        except TypeError:
+            pass
         if name in self._data_cache:
             return self._data_cache[name]
         if name in self.variables:

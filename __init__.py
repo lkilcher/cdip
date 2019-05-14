@@ -1,1 +1,1 @@
-from base import get_thredd
+from .base import get_thredd
