@@ -80,10 +80,16 @@ def get_thredd(station, deploy=None, cache_only=False):
     if cache_only:
         return CDIPbuoy(None, cache_id=(station, deploy))
 
-    url = ('http://thredds.cdip.ucsd.edu/thredds/'
-           'dodsC/cdip/archive/{st:03d}p1/'
-           '{st:03d}p1_{dep}.nc'.format(st=station,
-                                        dep=_parse_deploy(deploy)))
+    if deploy == 'realtime':
+        url = ('http://thredds.cdip.ucsd.edu/thredds/'
+               'dodsC/cdip/realtime/'
+               '{st:03d}p1_{dep}.nc'.format(st=station,
+                                            dep=_parse_deploy(deploy)))
+    else:
+        url = ('http://thredds.cdip.ucsd.edu/thredds/'
+               'dodsC/cdip/archive/{st:03d}p1/'
+               '{st:03d}p1_{dep}.nc'.format(st=station,
+                                            dep=_parse_deploy(deploy)))
 
     nc = nc4.Dataset(url)
     return CDIPbuoy(nc)
